@@ -1,0 +1,133 @@
+// The back of the cards
+const POKEBALL = "http://vignette3.wikia.nocookie.net/youtubepoop/images/4/4c/Pokeball.png/revision/latest"
+
+// The front of the cards
+const BULBASAUR = "http://cdn.bulbagarden.net/upload/2/21/001Bulbasaur.png"
+const CHARMANDER = "http://cdn.bulbagarden.net/upload/thumb/7/73/004Charmander.png/600px-004Charmander.png"
+const SQUIRTLE = "http://cdn.bulbagarden.net/upload/thumb/3/39/007Squirtle.png/250px-007Squirtle.png"
+const PIKACHU = "http://cdn.bulbagarden.net/upload/0/0d/025Pikachu.png"
+const JIGGLYPUFF = "http://cdn.bulbagarden.net/upload/thumb/3/3e/039Jigglypuff.png/250px-039Jigglypuff.png"
+const ABRA = "http://cdn.bulbagarden.net/upload/6/62/063Abra.png"
+const GYARADOS = "http://cdn.bulbagarden.net/upload/4/41/130Gyarados.png"
+const MEWTWO = "http://cdn.bulbagarden.net/upload/thumb/7/78/150Mewtwo.png/250px-150Mewtwo.png"
+const YOUWIN = "http://bbsimg.ngfiles.com/1/24409000/ngbbs50e4c4e6e051d.jpg"
+
+
+class Card extends React.Component {
+  render() {
+    var img_url = this.props.flipped ? this.props.img : POKEBALL;
+    var divStyle = {
+      backgroundImage: 'url(' + img_url + ')'
+    }
+    return (
+      <div className="card" style={divStyle} onClick={() => this.props.onClick()}>
+      </div>
+    );
+  }
+}
+
+class Board extends React.Component {
+  constructor(props) {
+    super(props);
+    var cards = props.monsters.map((image)=> { return {"img": image, "flipped": false, "matched": false}});
+    this.state = {
+      cards: cards,
+      selected: [],
+      score: 0,
+    };
+  }
+  
+  handleClick(i) {
+    const cards = this.state.cards.slice();
+    const selected = this.state.selected.slice();
+    var score = this.state.score;
+    if(!cards[i].matched) {
+      switch (this.state.selected.length) {
+        case 0:
+          selected.push(i);
+          cards[i].flipped = !cards[i].flipped
+          break;
+        case 1:
+          if(selected[0] == i) {
+            cards[i].flipped = !cards[i].flipped
+            selected.pop();
+          } else {
+            selected.push(i);
+            cards[i].flipped = !cards[i].flipped
+            this.setState({
+              cards: cards,
+              selected: selected,
+              score: score,
+            }, () => {
+              window.setTimeout(this.handleClick.bind(this), 1000, i);
+            });
+            return;
+          }
+          break;
+        case 2:
+          const card1 = selected.pop();
+          const card2 = selected.pop();
+          if(cards[card1].img == cards[card2].img) {
+            cards[card1].matched = true;
+            cards[card2].matched = true;
+            score = score + 1;
+          } else {
+            cards[card1].flipped = false;
+            cards[card2].flipped = false;
+          }
+      }
+      this.setState({
+        cards: cards,
+        selected: selected,
+        score: score,
+      });
+    } 
+    
+  }
+  
+  renderCard(i){
+    return <Card flipped={this.state.cards[i].flipped} img={this.state.cards[i].img} onClick={() => this.handleClick(i)}/>
+  }
+      
+  render() {
+    var img_url = this.state.score == 4 ? YOUWIN : "";
+    var divStyle = {
+      backgroundImage: 'url(' + img_url + ')'
+    }
+  	return (
+      <div>
+         <div className="row">
+           Score: {this.state.score}
+        </div>
+        <div className="row">
+          {this.renderCard(0)}
+          {this.renderCard(1)}
+          {this.renderCard(2)}
+        </div>
+        <div className="row">
+          {this.renderCard(3)}
+          <div className="card" style={divStyle} disable>
+          </div>
+          {this.renderCard(4)}
+        </div>
+        <div className="row">
+          {this.renderCard(5)}
+          {this.renderCard(6)}
+          {this.renderCard(7)}
+        </div>
+      </div>
+     );
+  }
+}
+
+class Concentration extends React.Component {
+	render() {
+  	return (
+      <div>
+        <Board monsters={[BULBASAUR, CHARMANDER, SQUIRTLE, PIKACHU, CHARMANDER, BULBASAUR, SQUIRTLE, PIKACHU]}/>
+      </div>
+     );
+  }
+}
+
+React.render(<Concentration />, document.getElementById('container'))
